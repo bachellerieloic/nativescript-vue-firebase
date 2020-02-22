@@ -34,6 +34,7 @@
     import * as utils from "~/shared/utils";
     import SelectedPageService from "../shared/selected-page-service";
     import Smoothie from "./Smoothie";
+    const firebase = require("nativescript-plugin-firebase");
 
     export default {
         components: {
@@ -63,7 +64,26 @@
                 utils.showDrawer();
             },
             onItemTap(event) {
+                 firebase.setValue('/smoothies',{foo:event.item});
                 console.log(event.item);
+                console.log('pushing');
+                  firebase.push(
+                    'smoothie-3a3b8/users',
+                    {
+                        'first': 'Eddy',
+                        'last': 'Verbruggen',
+                        'birthYear': 1977,
+                        'isMale': true,
+                        'address': {
+                        'street': 'foostreet',
+                        'number': 123
+                        }
+                    }
+                ).then(
+                    function (result) {
+                        console.log("created key: " + result.key);
+                    }
+                );
                 this.$navigateTo(Smoothie, {
                     transition: {
                         name:'fade',
