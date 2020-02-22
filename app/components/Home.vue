@@ -1,12 +1,12 @@
 <template>
     <Page class="page">
         <ActionBar class="action-bar">
-            <!-- 
+            <!--
             Use the NavigationButton as a side-drawer button in Android
             because ActionItems are shown on the right side of the ActionBar
             -->
             <NavigationButton ios:visibility="collapsed" icon="res://menu" @tap="onDrawerButtonTap"></NavigationButton>
-            <!-- 
+            <!--
             Use the ActionItem for IOS with position set to left. Using the
             NavigationButton as a side-drawer button in iOS is not possible,
             because its function is to always navigate back in the application.
@@ -20,13 +20,12 @@
             <Label class="page__content-placeholder" :text="message"></Label>
         </GridLayout>
 
-        <ListView for="item in items" @itemTap="onItemTap">
-            <v-template>
-                <!-- Shows the list item label in the default color and style. -->
-                <Label :text="item" />
-            </v-template>
-        </ListView>
-
+<!--        <ListView for="item in items" @itemTap="onItemTap">s-->
+<!--            <v-template>-->
+<!--                &lt;!&ndash; Shows the list item label in the default color and style. &ndash;&gt;-->
+<!--                <Label :text="item" />-->
+<!--            </v-template>-->
+<!--        </ListView>-->
     </Page>
 </template>
 
@@ -42,17 +41,27 @@
         },
         data() {
             return {
-                items: [
-                    'Something Green',
-                    'PB & Berry',
-                    'Power Me',
-                    'Fresh Mint',
-                    'Melissa',
-                ],
+                items: {
+                    'name': 'test'
+                },
             }
         },
         mounted() {
             SelectedPageService.getInstance().updateSelectedPage("Home");
+            let $this = this;
+            console.log('********** GET VALUES **********');
+            firebase.getValue('/smoothies')
+                .then(result => {
+                        console.log(JSON.stringify(result));
+                        $this.items = JSON.stringify(result);
+                        Object.keys(result).map(function(key, index) {
+                            $this.items.name = result['value']['name']);
+                        });
+                    }
+                )
+                .catch(error => console.log("Error: " + error));
+
+            console.log($this.items);
         },
         computed: {
             message() {
@@ -64,21 +73,9 @@
                 utils.showDrawer();
             },
             onItemTap(event) {
-                 firebase.setValue('/smoothies',{foo:event.item});
                 console.log(event.item);
                 console.log('pushing');
-                  firebase.push(
-                    'smoothie-3a3b8/users',
-                    {
-                        'first': 'Eddy',
-                        'last': 'Verbruggen',
-                        'birthYear': 1977,
-                        'isMale': true,
-                        'address': {
-                        'street': 'foostreet',
-                        'number': 123
-                        }
-                    }
+                firebase.push('smoothies/', { 'name' : event.item }
                 ).then(
                     function (result) {
                         console.log("created key: " + result.key);
@@ -90,7 +87,7 @@
                         duration: 200
                     },
                     props: {
-                        smoothieName: event.item, 
+                        smoothieName: event.item,
                     }
                 });
                 console.log(event.item);
