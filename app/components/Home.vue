@@ -17,15 +17,12 @@
 
         <GridLayout class="page__content">
             <Label class="page__content-icon fas" text.decode="&#xf015;"></Label>
-            <Label class="page__content-placeholder" :text="message"></Label>
+            <ListView for="(item, key) in getItems" @itemTap="onItemTap">
+                <v-template>
+                    <Label :text="item.price"/>
+                </v-template>
+            </ListView>
         </GridLayout>
-
-<!--        <ListView for="item in items" @itemTap="onItemTap">s-->
-<!--            <v-template>-->
-<!--                &lt;!&ndash; Shows the list item label in the default color and style. &ndash;&gt;-->
-<!--                <Label :text="item" />-->
-<!--            </v-template>-->
-<!--        </ListView>-->
     </Page>
 </template>
 
@@ -36,51 +33,59 @@
     const firebase = require("nativescript-plugin-firebase");
 
     export default {
-        components: {
-            Smoothie
-        },
+        components: {Smoothie},
         data() {
             return {
-                items: {
-                    'name': 'test'
-                },
+                items: {},
             }
         },
         mounted() {
             SelectedPageService.getInstance().updateSelectedPage("Home");
-            let $this = this;
-            console.log('********** GET VALUES **********');
-            firebase.getValue('/smoothies')
-                .then(result => {
-                        console.log(JSON.stringify(result));
-                        $this.items = JSON.stringify(result);
-                        Object.keys(result).map(function(key, index) {
-                            $this.items.name = result['value']['name']);
-                        });
-                    }
-                )
-                .catch(error => console.log("Error: " + error));
-
-            console.log($this.items);
+            // listen to changes in the /smoothie path
+            firebase.addChildEventListener(this.onChildEvent, "/smoothies").then(
+                function(listenerWrapper) {
+                    var path = listenerWrapper.path;
+                    var listeners = listenerWrapper.listeners; // an Array of listeners added
+                    // you can store the wrapper somewhere to later call 'removeEventListeners'
+                }
+            )
         },
         computed: {
             message() {
                 return "This is a smoothie app";
+            },
+            async getItems() {
+                let $this = this;
+                console.log('********** GET SMOOTHIES **********');
+                firebase.getValue('/smoothies')
+                    .then(result => {
+                        Object.keys(result.value).forEach(function(key) {
+                            $this.items[key] = result.value[key];
+                            console.log(key + ' - ' + $this.items[key].price);
+                        });
+                        return $this.items;
+                    }).catch(error => console.log("Error: " + error));
             }
         },
         methods: {
+            onChildEvent (result) {
+                this.items[result.key] = JSON.stringify(result.value);
+                console.log("Event type: " + result.type);
+                console.log("Key: " + result.key);
+                console.log("Value: " + JSON.stringify(result.value));
+            },
             onDrawerButtonTap() {
                 utils.showDrawer();
             },
             onItemTap(event) {
                 console.log(event.item);
                 console.log('pushing');
-                firebase.push('smoothies/', { 'name' : event.item }
-                ).then(
-                    function (result) {
-                        console.log("created key: " + result.key);
-                    }
-                );
+                // firebase.push('smoothies/', { 'name' : event.item }
+                // ).then(
+                //     function (result) {
+                //         console.log("created key: " + result.key);
+                //     }
+                // );
                 this.$navigateTo(Smoothie, {
                     transition: {
                         name:'fade',
